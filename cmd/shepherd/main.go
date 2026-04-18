@@ -19,10 +19,48 @@ var version = "dev" // Overridden by GoReleaser using ldflags
 func main() {
 	showVersion := flag.Bool("version", false, "print version and exit")
 	updateMe := flag.Bool("update", false, "update shepherd to the latest version")
+	uninstallMe := flag.Bool("uninstall", false, "uninstall shepherd from the system")
+	showHelp := flag.Bool("help", false, "show help message and exit")
+
+	flag.Usage = func() {
+		fmt.Printf("Shepherd — A universal, autonomous Linux package manager updater.\n\n")
+		fmt.Printf("Usage:\n  shepherd [flags]\n\n")
+		fmt.Printf("Flags:\n")
+		fmt.Printf("  --update     Update shepherd to the latest version\n")
+		fmt.Printf("  --uninstall  Uninstall shepherd from the system\n")
+		fmt.Printf("  --version    Print version and exit\n")
+		fmt.Printf("  --help       Show this help message and exit\n")
+	}
+
 	flag.Parse()
+
+	if *showHelp {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	if *showVersion {
 		fmt.Println(version)
+		os.Exit(0)
+	}
+
+	if *uninstallMe {
+		exe, err := os.Executable()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error determining executable path: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Uninstalling shepherd from %s...\n", exe)
+		if err := os.Remove(exe); err != nil {
+			if os.IsPermission(err) {
+				fmt.Fprintf(os.Stderr, "Permission denied. Please run with sudo:\n  sudo shepherd --uninstall\n")
+			} else {
+				fmt.Fprintf(os.Stderr, "Error uninstalling: %v\n", err)
+			}
+			os.Exit(1)
+		}
+		fmt.Println("Shepherd has been uninstalled successfully.")
 		os.Exit(0)
 	}
 
