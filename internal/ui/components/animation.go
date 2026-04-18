@@ -47,9 +47,9 @@ func (a *Animation) NextFrame() {
 // ─── Programmatic Frame Builder ─────────────────────────────────────────────
 
 const (
-	sceneW = 58
-	sceneH = 10
-	fenceX = 30
+	sceneW  = 58
+	sceneH  = 10
+	fenceX  = 30
 	nFrames = 12
 )
 
@@ -59,12 +59,12 @@ type point struct{ x, y int }
 // over a fence under a starry night sky with twinkling stars.
 func buildFrames() []string {
 	path := []point{
-		{5, 0}, {11, 0}, {17, 0},  // walking toward fence
+		{5, 0}, {11, 0}, {17, 0}, // walking toward fence
 		{22, 1}, {25, 2}, {28, 3}, // jumping up
-		{31, 3},                    // peak (over fence)
-		{34, 2}, {38, 1},          // descending
-		{43, 0}, {50, 0},          // walking away
-		{-1, 0},                    // pause (empty scene)
+		{31, 3},          // peak (over fence)
+		{34, 2}, {38, 1}, // descending
+		{43, 0}, {50, 0}, // walking away
+		{-1, 0}, // pause (empty scene)
 	}
 
 	// Two star-field patterns that alternate each frame for twinkling.
@@ -130,12 +130,12 @@ func buildFrames() []string {
 			case p.y >= 3:
 				wool = " ,@@@. "
 				face = "( >w< )"
-				body = "  /  \\"+" "
+				body = "  /  \\" + " "
 				feet = "       "
 			default:
 				wool = " ,@@@. "
 				face = "( o^o )"
-				body = "  /  \\"+" "
+				body = "  /  \\" + " "
 				feet = "       "
 			}
 

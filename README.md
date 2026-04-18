@@ -15,7 +15,7 @@ One command. One password. Every package manager updated.
 
 <br>
 
-<img src="assets/demo.png" alt="Shepherd Demo" width="520">
+<video src="./assets/demo.webm" width="100%" autoplay loop muted playsinline></video>
 
 <br>
 
@@ -134,6 +134,12 @@ Built with the [Charmbracelet](https://charm.sh/) ecosystem:
 ## Contributing
 
 Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) before getting started.
+ 
+## AI Assistance
+
+<i>"If you can't beat them, join them."</i><br>
+<p>This project was architected and developed with the support of <b>AI Assistance</b>.
+</p>
 
 ## License
 
