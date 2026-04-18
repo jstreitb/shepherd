@@ -15,17 +15,9 @@ One command. One password. Every package manager updated.
 
 <br>
 
-<p align="center">
-  <video src="https://github.com/user-attachments/assets/04bb94ab-fcc6-4d83-bf0c-1999b6a19f6f" 
-    width="100%" 
-    autoplay="autoplay" 
-    loop="loop" 
-    muted="true" 
-    playsinline="true">
-  </video>
-</p>
-<br>
+<img width="1200" height="600" alt="demo" src="https://github.com/user-attachments/assets/cadcefd1-1f0a-4344-bdea-3e87a59d1a96" />
 
+<br>
 </div>
 
 ---
