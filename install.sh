@@ -37,63 +37,72 @@ detect_os() {
 }
 
 get_latest_version() {
-    curl -sI "https://github.com/${REPO}/releases/latest" 2>/dev/null \
-        | grep -i "^location:" \
-        | sed 's#.*/tag/##' \
-        | tr -d '\r\n'
+    # Turn off pipefail locally so grep/curl on 404 doesn't panic the script
+    set +o pipefail
+    curl -sL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
+        | grep -Po '"tag_name": "\K.*?(?=")' \
+        | head -n 1
+    set -o pipefail
 }
 
 # ─── Animated Sheep Spinner ──────────────────────────────────────────────────
 
 animate() {
     local pid=$1
+    local status_msg="$2"
 
-    # Reserve space for animation (7 lines)
-    printf '\n\n\n\n\n\n\n'
-    printf '\033[?25l' # hide cursor
+    # Hide cursor and clear a large block
+    printf '\033[?25l'
+    printf '\n\n\n\n\n\n\n\n\n\n\n\n\n'
+
+    local frames=(
+        # Frame 0
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .    +    .   .        \n                                                          \n                                                          \n                                                          \n   ,@@@.                                                  \n  ( o.o )                                                 \n   /|  |\\                    |-|                          \n    d  b                     | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 1
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +    .  *   .  .          \n                                                          \n                                                          \n                                                          \n         ,@@@.                                            \n        ( o.o )                                           \n         /|  |\\              |-|                          \n          d  b               | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 2
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .    +    .   .        \n                                                          \n                                                          \n                                                          \n               ,@@@.                                      \n              ( o.o )                                     \n               /|  |\\        |-|                          \n                d  b         | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 3
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +    .  *   .  .          \n                                                          \n                                                          \n                    ,@@@.                                 \n                   ( o^o )                                \n                     /  \\                                 \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 4
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .    +    .   .        \n                                                          \n                       ,@@@.                              \n                      ( o^o )                             \n                        /  \\                              \n                                                          \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 5
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +*   .  *   .  .          \n                          ,@@@.                           \n                         ( >w< )                          \n                           /  \\                           \n                                                          \n                                                          \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 6
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .*   +    .   .        \n                             ,@@@.                        \n                            ( >w< )                       \n                              /  \\                        \n                                                          \n                                                          \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 7
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +    .  *   .  .          \n                                                          \n                                ,@@@.                     \n                               ( o^o )                    \n                                 /  \\                     \n                                                          \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 8
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .    +    .   .        \n                                                          \n                                                          \n                                    ,@@@.                 \n                                   ( o^o )                \n                                     /  \\                 \n                             |-|                          \n                             | |          ~               \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 9
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +    .  *   .  .          \n                                                          \n                                                          \n                                                          \n                                         ,@@@.            \n                                        ( o.o )           \n                             |-|         /|  |\\           \n                             | |          d  b            \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 10
+        "   .  *      .     +      C    .    +   .  *   .          \n     +   .    *    .      .     *  .    +    .   .        \n                                                          \n                                                          \n                                                          \n                                                ,@@@.     \n                                               ( o.o )    \n                             |-|                /|  |\\    \n                             | |                 d  b     \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+        # Frame 11
+        "     .    *    .  +    C     .   .  * .    .    +         \n   +    .   *      .    .       +    .  *   .  .          \n                                                          \n                                                          \n                                                          \n                                                          \n                                                          \n                             |-|                          \n                             | |                          \n---v---*--v------v---*--v------------v---*--v-------v--*--\n"
+    )
 
     local frame=0
     while kill -0 "$pid" 2>/dev/null; do
-        printf '\033[7A' # move up 7 lines
-
-        case $((frame % 4)) in
-            0)
-                printf "\033[K     ${MAGENTA},@@@.${RESET}\n"
-                printf "\033[K    ${MAGENTA}( o.o )${RESET}\n"
-                printf "\033[K     ${MAGENTA}/|  |\\\\${RESET}\n"
-                printf "\033[K      ${MAGENTA}d  b${RESET}\n"
-                ;;
-            1)
-                printf "\033[K     ${MAGENTA},@@@.${RESET}\n"
-                printf "\033[K    ${MAGENTA}( o.o )${RESET}\n"
-                printf "\033[K     ${MAGENTA}/|  |\\\\${RESET}\n"
-                printf "\033[K     ${MAGENTA}d    b${RESET}\n"
-                ;;
-            2)
-                printf "\033[K     ${MAGENTA},@@@.${RESET}\n"
-                printf "\033[K    ${MAGENTA}( o^o )${RESET}\n"
-                printf "\033[K     ${MAGENTA}/|  |\\\\${RESET}\n"
-                printf "\033[K      ${MAGENTA}d  b${RESET}\n"
-                ;;
-            3)
-                printf "\033[K     ${MAGENTA},@@@.${RESET}\n"
-                printf "\033[K    ${MAGENTA}( o.- )${RESET}\n"
-                printf "\033[K     ${MAGENTA}/|  |\\\\${RESET}\n"
-                printf "\033[K     ${MAGENTA}d    b${RESET}\n"
-                ;;
-        esac
-
+        # Move cursor up 13 lines
+        printf '\033[13A'
+        
+        # Print frame
+        printf '%b' "\033[35m${frames[$((frame % 12))]}\033[0m"
+        
+        # Calculate dots for status message
         local dots=""
         for ((d=0; d <= frame % 3; d++)); do dots="${dots}."; done
-        printf "\033[K\n"
-        printf "\033[K  ${DIM}Installing shepherd${dots}${RESET}\n"
-        printf "\033[K\n"
-
+        
+        # Empty line then status message centered (padding to 58)
+        # Using simple printing (left aligned to match sheep)
+        printf '\n\033[K\n'
+        printf '\033[K\033[2m%-58s\033[0m\n' "  ${status_msg}${dots}"
+        
         frame=$((frame + 1))
-        sleep 0.25
+        sleep 0.15
     done
-
-    printf '\033[?25h' # show cursor
+    printf '\033[?25h'
 }
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -139,17 +148,20 @@ main() {
     fi
 
     # Build download URL
-    url="https://github.com/${REPO}/releases/download/${version}/shepherd_${os}_${arch}.tar.gz"
+    if [ "$version" = "latest" ]; then
+        url="https://github.com/${REPO}/releases/latest/download/shepherd_${os}_${arch}.tar.gz"
+    else
+        url="https://github.com/${REPO}/releases/download/${version}/shepherd_${os}_${arch}.tar.gz"
+    fi
 
     tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"' EXIT
 
     # Download in background with animated sheep
-    info "Downloading from GitHub Releases..."
     curl -sSfL "$url" -o "$tmp/shepherd.tar.gz" &
     local dl_pid=$!
 
-    animate "$dl_pid"
+    animate "$dl_pid" "Downloading from GitHub Releases"
     wait "$dl_pid" || fail "Download failed. Check the URL: ${url}"
 
     # Extract

@@ -1,15 +1,6 @@
 <div align="center">
 
-<br>
-
-```
-     ,@@@.
-    ( o.o )
-     /|  |\
-      d  b
-```
-
-# shepherd
+# 🐑 Shepherd 🐑
 
 **The universal Linux package manager updater.**
 
