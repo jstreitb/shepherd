@@ -69,7 +69,7 @@ main() {
     step "Downloading artifacts"
     local tmp
     tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
+    trap "rm -rf \"$tmp\"" EXIT
 
     local url="https://github.com/${REPO}/releases/download/${version}/shepherd_${osarch}.tar.gz"
     
