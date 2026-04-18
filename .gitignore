@@ -1,0 +1,4 @@
+shepherd
+shepherd_test
+/dist/
+*.tar.gz
