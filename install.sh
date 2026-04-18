@@ -54,7 +54,7 @@ main() {
 
     if [ -z "$version" ]; then
         # Fallback to predefined if API fails
-        version="v1.0.0"
+        version="v1.0.1"
         warn "Could not fetch latest release tag, defaulting to ${version}"
     fi
     ok "Target version is ${version}"
