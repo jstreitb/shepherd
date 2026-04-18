@@ -35,6 +35,11 @@ To update Shepherd itself to the latest version, simply run:
 shepherd --update
 ```
 
+To uninstall Shepherd from your system, run:
+```bash
+shepherd --uninstall
+```
+
 Or build from source:
 
 ```bash
@@ -54,7 +59,16 @@ $ shepherd
 3. **Updates** everything sequentially with a live animated TUI
 4. **Shows** a summary of what succeeded and failed
 
-That's it. No config files, no flags, no setup.
+That's it. No config files, no complicated setup.
+
+## Command-Line Flags
+
+| Flag | Description |
+|------|-------------|
+| `--update` | Updates shepherd to the latest version |
+| `--uninstall` | Uninstalls shepherd from your system |
+| `--version` | Prints the current version |
+| `--help` | Shows the help message |
 
 ## Supported Package Managers
 
