@@ -16,9 +16,14 @@ One command. One password. Every package manager updated.
 <br>
 
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/04bb94ab-fcc6-4d83-bf0c-1999b6a19f6f" width="100%" autoplay loop muted playsinline style="border-radius: 8px;"></video>
+  <video src="https://github.com/user-attachments/assets/04bb94ab-fcc6-4d83-bf0c-1999b6a19f6f" 
+    width="100%" 
+    autoplay="autoplay" 
+    loop="loop" 
+    muted="true" 
+    playsinline="true">
+  </video>
 </p>
-
 <br>
 
 </div>
