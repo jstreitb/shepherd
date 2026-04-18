@@ -47,15 +47,11 @@ main() {
     step "Resolving latest version"
     local version=""
     
-    # Check if a specific version parameter was passed, otherwise default to "latest" API
-    set +o pipefail
-    version=$(curl -sSfL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep -Po '"tag_name": "\K.*?(?=")' | head -n 1)
-    set -o pipefail
+    # Use GitHub URL redirect to resolve latest release tag (no API rate limits)
+    version=$(curl -sI "https://github.com/${REPO}/releases/latest" 2>/dev/null | grep -i "^location:" | sed 's#.*/tag/##' | tr -d '\r\n')
 
     if [ -z "$version" ]; then
-        # Fallback to predefined if API fails
-        version="v1.0.1"
-        warn "Could not fetch latest release tag, defaulting to ${version}"
+        abort "Cannot resolve latest release tag. Is the repository fully published?"
     fi
     ok "Target version is ${version}"
     
