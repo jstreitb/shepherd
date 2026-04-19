@@ -10,8 +10,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/jstreitb/baa/internal/pkgmanager"
 	"github.com/jstreitb/baa/internal/ui"
 )
 
@@ -23,7 +24,10 @@ func main() {
 	uninstallMe := flag.Bool("uninstall", false, "uninstall baa from the system")
 	showHelp := flag.Bool("help", false, "show help message and exit")
 	showCredits := flag.Bool("credits", false, "show credits and exit")
+	showDetected := flag.Bool("detect", false, "show detected package managers and exit")
 	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
+	flag.BoolVar(showDetected, "d", *showDetected, "show credits and exit")
+
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -34,6 +38,7 @@ func main() {
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --credits    Show credits and exit\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
+		fmt.Printf("  --detect     Show detected package managers and exit\n")
 	}
 
 	flag.Parse()
@@ -50,6 +55,19 @@ func main() {
 
 	if *showCredits {
 		printCredits()
+		os.Exit(0)
+	}
+
+	if *showDetected {
+		found := pkgmanager.DetectInstalled()
+		if len(found) == 0 {
+			fmt.Println("baa has detected no package managers.")
+			os.Exit(0)
+		}
+		fmt.Println("baa has detected the following managers:")
+		for _, manager := range found {
+			fmt.Println("-", manager.Name())
+		}
 		os.Exit(0)
 	}
 
@@ -107,17 +125,17 @@ func printCredits() {
 
 	// Styles
 	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(colorGreen).
-		MarginBottom(1)
+	Bold(true).
+	Foreground(colorGreen).
+	MarginBottom(1)
 
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(colorLavender).
-		Bold(true).
-		MarginBottom(1)
+	Foreground(colorLavender).
+	Bold(true).
+	MarginBottom(1)
 
 	contentStyle := lipgloss.NewStyle().
-		Foreground(colorSubtext0)
+	Foreground(colorSubtext0)
 
 	// Build the credits message
 	title := titleStyle.Render("🐑 baa — The update herd")
