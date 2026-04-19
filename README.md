@@ -8,8 +8,8 @@ One command. One password. Every package manager updated.
 
 <br>
 
-[!IMPORTANT]
-**Shepherd is now BAA!** The project has been renamed. Please update your scripts: all commands now start with `baa` instead of `shepherd`.
+> [!IMPORTANT]
+> **Shepherd is now BAA!** The project has been renamed. Please update your scripts: all commands now start with `baa` instead of `shepherd`.
 
 <br>
 
