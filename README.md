@@ -152,6 +152,21 @@ Built with the [Charmbracelet](https://charm.sh/) ecosystem:
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss) — Styling
 - [Bubbles](https://github.com/charmbracelet/bubbles) — Components
 
+<div align="center">
+
+### 🐑 The Flock
+
+BAA is a community-driven project. A huge thank you to the amazing people who help guide the herd!
+
+<br>
+
+<a href="https://github.com/jstreitb/baa/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=jstreitb/baa&max=24&columns=8&anon=1&merge=true" />
+</a>
+
+<br><br>
+</div>
+
 ## Contributing
 
 Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) before getting started.
@@ -170,20 +185,7 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md)
 <hr>
 
 <div align="center">
-
-### 🐑 The Flock
-
-BAA is a community-driven project. A huge thank you to the amazing people who help guide the herd!
-
 <br>
-
-<a href="https://github.com/jstreitb/baa/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=jstreitb/baa&max=24&columns=8&anon=1&merge=true" />
-</a>
-
-<br><br>
-
 <sub>Made with 🐑 by <a href="https://github.com/jstreitb">jstreitb</a> and the flock.</sub>
-
 <br>
 </div>
