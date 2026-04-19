@@ -115,6 +115,12 @@ animate() {
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 main() {
+    # Pre-authenticate sudo if we likely need it to avoid hanging in the background animation
+    if [ ! -w "$INSTALL_DIR" ] && [ "$EUID" -ne 0 ]; then
+        printf "\n  \033[33mSudo privileges required to install to $INSTALL_DIR\033[0m\n"
+        sudo -v
+    fi
+
     # Start the dummy background process that keeps the animation running
     # until we explicitly kill it or it finishes. We use a subshell.
     (

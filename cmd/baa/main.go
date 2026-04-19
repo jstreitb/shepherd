@@ -74,7 +74,8 @@ func main() {
 	}
 
 	if *updateMe {
-		cmd := exec.Command("bash", "-c", "curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh | bash")
+		// Use process substitution instead of a pipe to keep stdin available for sudo prompts
+		cmd := exec.Command("bash", "-c", "bash <(curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh)")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
