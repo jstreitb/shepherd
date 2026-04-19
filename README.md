@@ -8,6 +8,11 @@ One command. One password. Every package manager updated.
 
 <br>
 
+[!IMPORTANT]
+**Shepherd is now BAA!** The project has been renamed. Please update your scripts: all commands now start with `baa` instead of `shepherd`.
+
+<br>
+
 [![Release](https://img.shields.io/github/v/release/jstreitb/baa?style=flat-square&color=b7bdf8&label=Release)](https://github.com/jstreitb/baa/releases)
 [![License](https://img.shields.io/badge/License-MIT-a6da95?style=flat-square)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.21+-8aadf4?style=flat-square&logo=go&logoColor=white)](https://go.dev)
