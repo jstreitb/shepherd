@@ -10,6 +10,13 @@ One command. One password. Every package manager updated.
 </div>
 
 > [!IMPORTANT]
+> **YOU HAVE TO UPDATE MANUALLY!** I broke the update script, so you have to update manually this update. In this version it's functioning again. Sorry!
+
+<div align="center">
+<br>
+</div>
+
+> [!IMPORTANT]
 > **Shepherd is now BAA!** The project has been renamed. Please update your software to the latest version: all commands now start with `baa` instead of `shepherd`.
 
 <div align="center">
