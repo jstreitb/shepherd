@@ -10,18 +10,9 @@ One command. One password. Every package manager updated.
 </div>
 
 > [!IMPORTANT]
-> **Shepherd is now BAA!** The project has been renamed. Please update your scripts: all commands now start with `baa` instead of `shepherd`.
+> **Shepherd is now BAA!** The project has been renamed. Please update your software to the latest version: all commands now start with `baa` instead of `shepherd`.
 
 <div align="center">
-<br>
-
-</div>
-
-> [!IMPORTANT]
-> **Shepherd is now BAA!** The project has been renamed. Please update your scripts: all commands now start with `baa` instead of `shepherd`.
-
-<div align="center">
-
 <br>
 
 [![Release](https://img.shields.io/github/v/release/jstreitb/baa?style=flat-square&color=b7bdf8&label=Release)](https://github.com/jstreitb/baa/releases)
