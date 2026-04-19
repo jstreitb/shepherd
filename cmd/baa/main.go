@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jstreitb/baa/internal/ui"
 )
@@ -21,6 +22,8 @@ func main() {
 	updateMe := flag.Bool("update", false, "update baa to the latest version")
 	uninstallMe := flag.Bool("uninstall", false, "uninstall baa from the system")
 	showHelp := flag.Bool("help", false, "show help message and exit")
+	showCredits := flag.Bool("credits", false, "show credits and exit")
+	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -29,6 +32,7 @@ func main() {
 		fmt.Printf("  --update     Update baa to the latest version\n")
 		fmt.Printf("  --uninstall  Uninstall baa from the system\n")
 		fmt.Printf("  --version    Print version and exit\n")
+		fmt.Printf("  --credits    Show credits and exit\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
 
@@ -41,6 +45,11 @@ func main() {
 
 	if *showVersion {
 		fmt.Println(version)
+		os.Exit(0)
+	}
+
+	if *showCredits {
+		printCredits()
 		os.Exit(0)
 	}
 
@@ -88,4 +97,45 @@ func main() {
 		fmt.Fprintf(os.Stderr, "baa: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func printCredits() {
+	// Color palette from Catppuccin Macchiato
+	colorGreen := lipgloss.Color("#a6da95")
+	colorLavender := lipgloss.Color("#b7bdf8")
+	colorSubtext0 := lipgloss.Color("#a5adcb")
+
+	// Styles
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(colorGreen).
+		MarginBottom(1)
+
+	subtitleStyle := lipgloss.NewStyle().
+		Foreground(colorLavender).
+		Bold(true).
+		MarginBottom(1)
+
+	contentStyle := lipgloss.NewStyle().
+		Foreground(colorSubtext0)
+
+	// Build the credits message
+	title := titleStyle.Render("🐑 baa — The update herd")
+	devSection := subtitleStyle.Render("Main Developer:") + "\n" + contentStyle.Render("jstreitb")
+	poweredSection := subtitleStyle.Render("Powered by:") + "\n" + contentStyle.Render("Charmbracelet (Bubble Tea, Lip Gloss, Bubbles)")
+	licenseSection := subtitleStyle.Render("License:") + "\n" + contentStyle.Render("MIT")
+	thanksSection := contentStyle.Render("\nSpecial thanks to all contributors!")
+
+	// Print with spacing
+	fmt.Println()
+	fmt.Println(title)
+	fmt.Println()
+	fmt.Println(devSection)
+	fmt.Println()
+	fmt.Println(poweredSection)
+	fmt.Println()
+	fmt.Println(licenseSection)
+	fmt.Println()
+	fmt.Println(thanksSection)
+	fmt.Println()
 }
