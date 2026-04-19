@@ -24,7 +24,7 @@ One command. One password. Every package manager updated.
 
 <br>
 
-<img width="1200" height="600" alt="demo" src="https://github.com/user-attachments/assets/cadcefd1-1f0a-4344-bdea-3e87a59d1a96" />
+<img width="1200" height="600" alt="demo" src="https://github.com/user-attachments/assets/12710854-d638-436b-9de4-d6d9ba3cfab7" />
 
 <br>
 </div>
