@@ -108,34 +108,49 @@ func printCredits() {
 	// Styles
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(colorGreen).
-		MarginBottom(1)
+		Foreground(colorGreen)
 
 	subtitleStyle := lipgloss.NewStyle().
 		Foreground(colorLavender).
-		Bold(true).
-		MarginBottom(1)
+		Bold(true)
 
 	contentStyle := lipgloss.NewStyle().
 		Foreground(colorSubtext0)
 
-	// Build the credits message
+	// Build sections
 	title := titleStyle.Render("🐑 baa — The update herd")
-	devSection := subtitleStyle.Render("Main Developer:") + "\n" + contentStyle.Render("jstreitb")
-	poweredSection := subtitleStyle.Render("Powered by:") + "\n" + contentStyle.Render("Charmbracelet (Bubble Tea, Lip Gloss, Bubbles)")
-	licenseSection := subtitleStyle.Render("License:") + "\n" + contentStyle.Render("MIT")
-	thanksSection := contentStyle.Render("\nSpecial thanks to all contributors!")
 
-	// Print with spacing
-	fmt.Println()
-	fmt.Println(title)
-	fmt.Println()
-	fmt.Println(devSection)
-	fmt.Println()
-	fmt.Println(poweredSection)
-	fmt.Println()
-	fmt.Println(licenseSection)
-	fmt.Println()
-	fmt.Println(thanksSection)
-	fmt.Println()
+	devSection := lipgloss.JoinVertical(lipgloss.Left,
+		subtitleStyle.Render("Main Developer:"),
+		contentStyle.Render("jstreitb"),
+	)
+
+	poweredSection := lipgloss.JoinVertical(lipgloss.Left,
+		subtitleStyle.Render("Powered by:"),
+		contentStyle.Render("Charmbracelet (Bubble Tea, Lip Gloss, Bubbles)"),
+	)
+
+	licenseSection := lipgloss.JoinVertical(lipgloss.Left,
+		subtitleStyle.Render("License:"),
+		contentStyle.Render("MIT"),
+	)
+
+	thanksSection := contentStyle.Render("Special thanks to all contributors!")
+
+	// Join all sections with consistent spacing
+	out := lipgloss.JoinVertical(
+		lipgloss.Left,
+		title,
+		"",
+		devSection,
+		"",
+		poweredSection,
+		"",
+		licenseSection,
+		"",
+		thanksSection,
+	)
+
+	// Print with a single wrapper
+	fmt.Println(lipgloss.NewStyle().Margin(1, 2).Render(out))
 }

@@ -74,6 +74,7 @@ That's it. No config files, no complicated setup.
 |------|-------------|
 | `--update` | Updates baa to the latest version |
 | `--uninstall` | Uninstalls baa from your system |
+| `--credits` | Shows the credits and exit |
 | `--version` | Prints the current version |
 | `--help` | Shows the help message |
 
@@ -165,8 +166,24 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md)
 
 [MIT](LICENSE) — go build something great.
 
-<div align="center">
 <br>
-<sub>Made with 🐑 by <a href="https://github.com/jstreitb">jstreitb</a></sub>
+<hr>
+
+<div align="center">
+
+### 🐑 The Flock
+
+BAA is a community-driven project. A huge thank you to the amazing people who help guide the herd!
+
+<br>
+
+<a href="https://github.com/jstreitb/baa/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=jstreitb/baa&max=24&columns=8&anon=1&merge=true" />
+</a>
+
 <br><br>
+
+<sub>Made with 🐑 by <a href="https://github.com/jstreitb">jstreitb</a> and the flock.</sub>
+
+<br>
 </div>

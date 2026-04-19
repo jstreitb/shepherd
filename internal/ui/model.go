@@ -63,7 +63,7 @@ type Model struct {
 
 	// Detection results.
 	managers []pkgmanager.PackageManager
-	
+
 	// Update info
 	latestVersion string
 
@@ -121,7 +121,7 @@ func checkUpdateCmd() tea.Cmd {
 		if AppVersion == "dev" {
 			return checkUpdateMsg("")
 		}
-		
+
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse // Don't follow redirect, just read Location
@@ -133,14 +133,14 @@ func checkUpdateCmd() tea.Cmd {
 			return checkUpdateMsg("")
 		}
 		defer res.Body.Close()
-		
+
 		loc, err := res.Location()
 		if err == nil && loc != nil && strings.Contains(loc.Path, "/tag/") {
 			parts := strings.Split(loc.Path, "/")
 			latest := parts[len(parts)-1]
 			latest = strings.TrimPrefix(latest, "v")
 			curr := strings.TrimPrefix(AppVersion, "v")
-			
+
 			if latest != "" && latest != curr {
 				return checkUpdateMsg(latest)
 			}
