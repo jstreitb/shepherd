@@ -2,8 +2,8 @@
 version: 2
 
 builds:
-  - main: ./cmd/shepherd
-    binary: shepherd
+  - main: ./cmd/baa
+    binary: baa
     env:
       - CGO_ENABLED=0
     goos:
@@ -16,7 +16,7 @@ builds:
 
 archives:
   - format: tar.gz
-    name_template: "shepherd_{{ .Os }}_{{ .Arch }}"
+    name_template: "baa_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
@@ -33,7 +33,7 @@ changelog:
 release:
   github:
     owner: jstreitb
-    name: shepherd
+    name: baa
   draft: false
   prerelease: auto
   name_template: "v{{ .Version }}"

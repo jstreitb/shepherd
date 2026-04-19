@@ -1,4 +1,4 @@
-// Package ui implements the Bubbletea TUI for Shepherd.
+// Package ui implements the Bubbletea TUI for BAA.
 package ui
 
 import "github.com/charmbracelet/lipgloss"

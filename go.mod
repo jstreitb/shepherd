@@ -1,4 +1,4 @@
-module github.com/jstreitb/shepherd
+module github.com/jstreitb/baa
 
 go 1.26.2
 

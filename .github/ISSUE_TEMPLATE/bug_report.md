@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug Report
-about: Report a bug to help us improve Shepherd
+about: Report a bug to help us improve BAA
 title: "[Bug]: "
 labels: ["bug", "triage"]
 assignees: ""
@@ -12,7 +12,7 @@ A clear and concise description of what the bug is.
 
 ## Steps to Reproduce
 
-1. Run `shepherd`
+1. Run `baa`
 2. Enter password
 3. ...
 4. See error
@@ -28,7 +28,7 @@ What actually happened instead.
 ## Environment
 
 - **OS:** (e.g., Ubuntu 24.04, Arch Linux)
-- **Shepherd Version:** (run `shepherd --version` or `git rev-parse --short HEAD`)
+- **BAA Version:** (run `baa --version` or `git rev-parse --short HEAD`)
 - **Terminal:** (e.g., Alacritty, Kitty, GNOME Terminal)
 - **Package Managers Installed:** (e.g., apt, flatpak)
 

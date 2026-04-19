@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Shepherd Installer — https://github.com/jstreitb/shepherd
-# Usage: curl -sSfL https://raw.githubusercontent.com/jstreitb/shepherd/main/install.sh | bash
+# BAA Installer — https://github.com/jstreitb/baa
+# Usage: curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh | bash
 set -euo pipefail
 
 # ─── Styling ─────────────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@ GREEN="$(tput setaf 2 2>/dev/null || printf '\033[32m')"
 YELLOW="$(tput setaf 3 2>/dev/null || printf '\033[33m')"
 RED="$(tput setaf 1 2>/dev/null || printf '\033[31m')"
 
-REPO="jstreitb/shepherd"
+REPO="jstreitb/baa"
 INSTALL_DIR="/usr/local/bin"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -26,14 +26,14 @@ abort() { printf "\n  ${RED}${BOLD}✗ Error:${RESET} %s\n\n" "$1"; exit 1; }
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 main() {
-    printf "\n  ${BOLD}🐑 shepherd${RESET} ${DIM}installer${RESET}\n"
+    printf "\n  ${BOLD}🐑 baa${RESET} ${DIM}installer${RESET}\n"
 
     # 1. Detect System
     step "Detecting system environment"
     local osarch
     
     if [ "$(uname -s)" != "Linux" ]; then
-        abort "Shepherd currently only supports Linux."
+        abort "BAA currently only supports Linux."
     fi
     
     case "$(uname -m)" in
@@ -56,11 +56,11 @@ main() {
     ok "Target version is ${version}"
     
     # Check if already installed
-    if command -v shepherd >/dev/null; then
+    if command -v baa >/dev/null; then
         local current
-        current="$(shepherd --version 2>/dev/null || true)"
+        current="$(baa --version 2>/dev/null || true)"
         if [ "$current" = "$version" ] || [ "$current" = "${version#v}" ]; then
-            printf "\n  ${GREEN}✨ Shepherd is already up to date (${current}).${RESET}\n\n"
+            printf "\n  ${GREEN}✨ BAA is already up to date (${current}).${RESET}\n\n"
             exit 0
         fi
     fi
@@ -71,41 +71,41 @@ main() {
     tmp="$(mktemp -d)"
     trap "rm -rf \"$tmp\"" EXIT
 
-    local url="https://github.com/${REPO}/releases/download/${version}/shepherd_${osarch}.tar.gz"
+    local url="https://github.com/${REPO}/releases/download/${version}/baa_${osarch}.tar.gz"
     
     # Try downloading
-    if curl -sSfL "$url" -o "$tmp/shepherd.tar.gz" 2>/dev/null; then
+    if curl -sSfL "$url" -o "$tmp/baa.tar.gz" 2>/dev/null; then
         ok "Download complete"
     else
         abort "Download failed (Release might not be published yet)"
     fi
 
     # 4. Extract
-    if ! tar -xzf "$tmp/shepherd.tar.gz" -C "$tmp" 2>/dev/null; then
+    if ! tar -xzf "$tmp/baa.tar.gz" -C "$tmp" 2>/dev/null; then
         # Fallback if it was a raw binary instead of tarball
-        mv "$tmp/shepherd.tar.gz" "$tmp/shepherd"
+        mv "$tmp/baa.tar.gz" "$tmp/baa"
     fi
 
     # 5. Install
     step "Installing binary"
     
-    local dest="${INSTALL_DIR}/shepherd"
-    if command -v shepherd >/dev/null; then
-        dest="$(command -v shepherd)"
+    local dest="${INSTALL_DIR}/baa"
+    if command -v baa >/dev/null; then
+        dest="$(command -v baa)"
     fi
     
     if [ -w "$(dirname "$dest")" ] && [ ! -d "$dest" ]; then
-        mv "$tmp/shepherd" "$dest"
+        mv "$tmp/baa" "$dest"
         chmod +x "$dest"
     else
         warn "Sudo permissions required to install to ${dest}"
-        sudo mv "$tmp/shepherd" "$dest"
+        sudo mv "$tmp/baa" "$dest"
         sudo chmod +x "$dest"
     fi
     ok "Installed to ${dest}"
 
     printf "\n  ${GREEN}${BOLD}✨ Installation successful!${RESET}\n"
-    printf "  ${DIM}Run ${BOLD}shepherd${DIM} in your terminal to start updating your system.${RESET}\n\n"
+    printf "  ${DIM}Run ${BOLD}baa${DIM} in your terminal to start updating your system.${RESET}\n\n"
 }
 
 main "$@"

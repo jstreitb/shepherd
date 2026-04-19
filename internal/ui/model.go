@@ -12,9 +12,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/jstreitb/shepherd/internal/pkgmanager"
-	"github.com/jstreitb/shepherd/internal/ui/components"
-	"github.com/jstreitb/shepherd/internal/utils"
+	"github.com/jstreitb/baa/internal/pkgmanager"
+	"github.com/jstreitb/baa/internal/ui/components"
+	"github.com/jstreitb/baa/internal/utils"
 )
 
 // ─── Application States ────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ var AppVersion = "dev"
 
 // ─── Model ─────────────────────────────────────────────────────────────────
 
-// Model is the top-level Bubbletea model for Shepherd.
+// Model is the top-level Bubbletea model for BAA.
 type Model struct {
 	state  State
 	width  int
@@ -128,7 +128,7 @@ func checkUpdateCmd() tea.Cmd {
 			},
 			Timeout: 2 * time.Second,
 		}
-		res, err := client.Get("https://github.com/jstreitb/shepherd/releases/latest")
+		res, err := client.Get("https://github.com/jstreitb/baa/releases/latest")
 		if err != nil {
 			return checkUpdateMsg("")
 		}

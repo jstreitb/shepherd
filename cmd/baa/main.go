@@ -1,4 +1,4 @@
-// Shepherd — A universal, autonomous Linux package manager updater.
+// BAA — A universal, autonomous Linux package manager updater.
 //
 // This is the application entry point. It initialises the Bubbletea program
 // in alt-screen mode and runs the TUI until the user exits.
@@ -11,23 +11,23 @@ import (
 	"os/exec"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jstreitb/shepherd/internal/ui"
+	"github.com/jstreitb/baa/internal/ui"
 )
 
 var version = "dev" // Overridden by GoReleaser using ldflags
 
 func main() {
 	showVersion := flag.Bool("version", false, "print version and exit")
-	updateMe := flag.Bool("update", false, "update shepherd to the latest version")
-	uninstallMe := flag.Bool("uninstall", false, "uninstall shepherd from the system")
+	updateMe := flag.Bool("update", false, "update baa to the latest version")
+	uninstallMe := flag.Bool("uninstall", false, "uninstall baa from the system")
 	showHelp := flag.Bool("help", false, "show help message and exit")
 
 	flag.Usage = func() {
-		fmt.Printf("Shepherd — A universal, autonomous Linux package manager updater.\n\n")
-		fmt.Printf("Usage:\n  shepherd [flags]\n\n")
+		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
+		fmt.Printf("Usage:\n  baa [flags]\n\n")
 		fmt.Printf("Flags:\n")
-		fmt.Printf("  --update     Update shepherd to the latest version\n")
-		fmt.Printf("  --uninstall  Uninstall shepherd from the system\n")
+		fmt.Printf("  --update     Update baa to the latest version\n")
+		fmt.Printf("  --uninstall  Uninstall baa from the system\n")
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
@@ -51,26 +51,26 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("Uninstalling shepherd from %s...\n", exe)
+		fmt.Printf("Uninstalling baa from %s...\n", exe)
 		if err := os.Remove(exe); err != nil {
 			if os.IsPermission(err) {
-				fmt.Fprintf(os.Stderr, "Permission denied. Please run with sudo:\n  sudo shepherd --uninstall\n")
+				fmt.Fprintf(os.Stderr, "Permission denied. Please run with sudo:\n  sudo baa --uninstall\n")
 			} else {
 				fmt.Fprintf(os.Stderr, "Error uninstalling: %v\n", err)
 			}
 			os.Exit(1)
 		}
-		fmt.Println("Shepherd has been uninstalled successfully.")
+		fmt.Println("BAA has been uninstalled successfully.")
 		os.Exit(0)
 	}
 
 	if *updateMe {
-		cmd := exec.Command("bash", "-c", "curl -sSfL https://raw.githubusercontent.com/jstreitb/shepherd/main/install.sh | bash")
+		cmd := exec.Command("bash", "-c", "curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh | bash")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "\nOops! The update failed.\n(GitHub returned a 404 Error. Have you pushed the repository & install.sh to 'jstreitb/shepherd' yet?)\n")
+			fmt.Fprintf(os.Stderr, "\nOops! The update failed.\n(GitHub returned a 404 Error. Have you pushed the repository & install.sh to 'jstreitb/baa' yet?)\n")
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -85,7 +85,7 @@ func main() {
 	)
 
 	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "shepherd: %v\n", err)
+		fmt.Fprintf(os.Stderr, "baa: %v\n", err)
 		os.Exit(1)
 	}
 }

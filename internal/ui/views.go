@@ -13,7 +13,7 @@ import (
 func viewInit(m Model) string {
 	return centerVertically(m,
 		lipgloss.JoinVertical(lipgloss.Center,
-			TitleStyle.Render("🐑 shepherd"),
+			TitleStyle.Render("🐑 baa"),
 			"",
 			m.spinner.View()+"  "+SubtitleStyle.Render("Detecting package managers…"),
 		),
@@ -24,7 +24,7 @@ func viewInit(m Model) string {
 // Minimalist: title, description, detected list, password field, "Next".
 
 func viewLogin(m Model) string {
-	title := TitleStyle.Render("🐑 shepherd")
+	title := TitleStyle.Render("🐑 baa")
 
 	desc := SubtitleStyle.Render("Enter your password to update your system.")
 
@@ -42,7 +42,7 @@ func viewLogin(m Model) string {
 
 	var updateHint string
 	if m.latestVersion != "" {
-		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `shepherd --update` later", m.latestVersion))
+		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update` later", m.latestVersion))
 	}
 
 	return centerVertically(m,
@@ -150,7 +150,7 @@ func viewSummary(m Model) string {
 	if len(m.managers) == 0 {
 		return centerVertically(m,
 			lipgloss.JoinVertical(lipgloss.Center,
-				TitleStyle.Render("🐑 shepherd"),
+				TitleStyle.Render("🐑 baa"),
 				"",
 				WarningStyle.Render("No supported package managers found."),
 				SubtitleStyle.Render("Supported: apt, pacman, flatpak, snap"),
@@ -192,7 +192,7 @@ func viewSummary(m Model) string {
 	
 	var updateHint string
 	if m.latestVersion != "" {
-		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `shepherd --update`", m.latestVersion))
+		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update`", m.latestVersion))
 	}
 
 	return centerVertically(m,

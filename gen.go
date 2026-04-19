@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jstreitb/shepherd/internal/ui/components"
+	"github.com/jstreitb/baa/internal/ui/components"
 )
 
 func main() {
@@ -13,11 +13,11 @@ func main() {
 	
 	var out strings.Builder
 	out.WriteString(`#!/usr/bin/env bash
-# Shepherd Installer — https://github.com/jstreitb/shepherd
-# Usage: curl -sSfL https://raw.githubusercontent.com/jstreitb/shepherd/main/install.sh | bash
+# BAA Installer — https://github.com/jstreitb/baa
+# Usage: curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh | bash
 set -euo pipefail
 
-REPO="jstreitb/shepherd"
+REPO="jstreitb/baa"
 INSTALL_DIR="/usr/local/bin"
 STATUS_FILE="$(mktemp)"
 trap 'rm -f "$STATUS_FILE"; printf "\033[?25h"' EXIT
@@ -44,7 +44,7 @@ detect_arch() {
 detect_os() {
     case "$(uname -s | tr '[:upper:]' '[:lower:]')" in
         linux)  echo "linux" ;;
-        *)      fail "Shepherd only supports Linux." ;;
+        *)      fail "BAA only supports Linux." ;;
     esac
 }
 
@@ -138,8 +138,8 @@ main() {
 
         update_status "Checking local installation..."
         local current_version="none"
-        if command -v shepherd >/dev/null; then
-            current_version="$(shepherd --version 2>/dev/null || echo "unknown")"
+        if command -v baa >/dev/null; then
+            current_version="$(baa --version 2>/dev/null || echo "unknown")"
             if [ "$current_version" = "$version" ] || [ "$current_version" = "v$version" ]; then
                 echo "ALREADY_UP_TO_DATE" > "$STATUS_FILE"
                 exit 0
@@ -148,37 +148,37 @@ main() {
 
         update_status "Resolving download URL..."
         if [ "$version" = "latest" ]; then
-            url="https://github.com/${REPO}/releases/latest/download/shepherd_${os}_${arch}.tar.gz"
+            url="https://github.com/${REPO}/releases/latest/download/baa_${os}_${arch}.tar.gz"
         else
-            url="https://github.com/${REPO}/releases/download/${version}/shepherd_${os}_${arch}.tar.gz"
+            url="https://github.com/${REPO}/releases/download/${version}/baa_${os}_${arch}.tar.gz"
         fi
 
         tmp="$(mktemp -d)"
         
-        update_status "Downloading shepherd ${version}..."
-        if ! curl -sSfL "$url" -o "$tmp/shepherd.tar.gz"; then
+        update_status "Downloading baa ${version}..."
+        if ! curl -sSfL "$url" -o "$tmp/baa.tar.gz"; then
             echo "ERROR_DOWNLOAD:$url" > "$STATUS_FILE"
             exit 1
         fi
 
         update_status "Extracting binaries..."
-        tar -xzf "$tmp/shepherd.tar.gz" -C "$tmp" 2>/dev/null || {
-            mv "$tmp/shepherd.tar.gz" "$tmp/shepherd"
+        tar -xzf "$tmp/baa.tar.gz" -C "$tmp" 2>/dev/null || {
+            mv "$tmp/baa.tar.gz" "$tmp/baa"
         }
 
         update_status "Installing to system..."
-        local install_dest="${INSTALL_DIR}/shepherd"
-        if command -v shepherd >/dev/null; then
-            install_dest="$(command -v shepherd)"
+        local install_dest="${INSTALL_DIR}/baa"
+        if command -v baa >/dev/null; then
+            install_dest="$(command -v baa)"
         fi
 
         if [ -w "$(dirname "$install_dest")" ] && [ ! -d "$install_dest" ]; then
-            mv "$tmp/shepherd" "$install_dest"
+            mv "$tmp/baa" "$install_dest"
             chmod +x "$install_dest"
         else
             # Request sudo inside the animation
             update_status "Requesting sudo to install to ${install_dest}..."
-            sudo mv "$tmp/shepherd" "$install_dest"
+            sudo mv "$tmp/baa" "$install_dest"
             sudo chmod +x "$install_dest"
         fi
         
@@ -206,11 +206,11 @@ main() {
         printf '  \033[33m(This usually means the GitHub Release is not uploaded or public yet.)\033[0m\n\n'
         exit 1
     elif [ "$result" = "ALREADY_UP_TO_DATE" ]; then
-        printf '\n  \033[32m\033[1m✓ Shepherd is already up to date!\033[0m\n\n'
+        printf '\n  \033[32m\033[1m✓ BAA is already up to date!\033[0m\n\n'
     elif [[ "$result" == SUCCESS* ]]; then
         local ver="${result#SUCCESS:}"
-        printf '\n  \033[32m\033[1m✓ Shepherd %s installed successfully!\033[0m\n' "$ver"
-        printf '  \033[2mRun \033[1mshepherd\033[2m to get started.\033[0m\n\n'
+        printf '\n  \033[32m\033[1m✓ BAA %s installed successfully!\033[0m\n' "$ver"
+        printf '  \033[2mRun \033[1mbaa\033[2m to get started.\033[0m\n\n'
     else
         printf '\n  \033[31m\033[1m✗ Installation failed mysteriously.\033[0m\n\n'
         exit 1

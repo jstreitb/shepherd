@@ -8,5 +8,5 @@ func SheepLogo(accent lipgloss.Color) string {
 	return lipgloss.NewStyle().
 		Bold(true).
 		Foreground(accent).
-		Render("🐑 shepherd")
+		Render("🐑 baa")
 }

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🐑 Shepherd 🐑
+# 🐑 BAA 🐑
 
 **The universal Linux package manager updater.**
 
@@ -8,10 +8,10 @@ One command. One password. Every package manager updated.
 
 <br>
 
-[![Release](https://img.shields.io/github/v/release/jstreitb/shepherd?style=flat-square&color=b7bdf8&label=Release)](https://github.com/jstreitb/shepherd/releases)
+[![Release](https://img.shields.io/github/v/release/jstreitb/baa?style=flat-square&color=b7bdf8&label=Release)](https://github.com/jstreitb/baa/releases)
 [![License](https://img.shields.io/badge/License-MIT-a6da95?style=flat-square)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.21+-8aadf4?style=flat-square&logo=go&logoColor=white)](https://go.dev)
-[![Stars](https://img.shields.io/github/stars/jstreitb/shepherd?style=flat-square&color=eed49f)](https://github.com/jstreitb/shepherd/stargazers)
+[![Stars](https://img.shields.io/github/stars/jstreitb/baa?style=flat-square&color=eed49f)](https://github.com/jstreitb/baa/stargazers)
 
 <br>
 
@@ -25,33 +25,33 @@ One command. One password. Every package manager updated.
 ## Quick Install
 
 ```bash
-curl -sSfL https://raw.githubusercontent.com/jstreitb/shepherd/main/install.sh | bash
+curl -sSfL https://raw.githubusercontent.com/jstreitb/baa/main/install.sh | bash
 ```
 
 > **Security Note:** You can verify the installer script before running it by downloading it first, reading it, or checking its checksum against the release assets.
 
-To update Shepherd itself to the latest version, simply run:
+To update BAA itself to the latest version, simply run:
 ```bash
-shepherd --update
+baa --update
 ```
 
-To uninstall Shepherd from your system, run:
+To uninstall BAA from your system, run:
 ```bash
-shepherd --uninstall
+baa --uninstall
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/jstreitb/shepherd.git
-cd shepherd && make build
-sudo mv shepherd /usr/local/bin/
+git clone https://github.com/jstreitb/baa.git
+cd baa && make build
+sudo mv baa /usr/local/bin/
 ```
 
 ## How It Works
 
 ```
-$ shepherd
+$ baa
 ```
 
 1. **Detects** installed package managers automatically
@@ -65,8 +65,8 @@ That's it. No config files, no complicated setup.
 
 | Flag | Description |
 |------|-------------|
-| `--update` | Updates shepherd to the latest version |
-| `--uninstall` | Uninstalls shepherd from your system |
+| `--update` | Updates baa to the latest version |
+| `--uninstall` | Uninstalls baa from your system |
 | `--version` | Prints the current version |
 | `--help` | Shows the help message |
 
@@ -100,7 +100,7 @@ Non-interactive flags handle everything. No "Press Y to continue" interruptions.
 <td width="50%">
 
 ### 🛟 Interactive Fallback
-If a manager *needs* user input (e.g. a dpkg config prompt), Shepherd suspends the TUI and drops you into the raw terminal. Resume is automatic.
+If a manager *needs* user input (e.g. a dpkg config prompt), BAA suspends the TUI and drops you into the raw terminal. Resume is automatic.
 
 ### 🎨 Beautiful TUI
 Catppuccin Macchiato theme, ASCII sheep animation, live command output, styled summary screen.
@@ -114,7 +114,7 @@ Single static binary. No runtime dependencies. ~3 MB.
 
 ## Security
 
-Shepherd takes security seriously:
+BAA takes security seriously:
 
 | Measure | Implementation |
 |---------|---------------|
@@ -128,8 +128,8 @@ Shepherd takes security seriously:
 ## Architecture
 
 ```
-shepherd/
-├── cmd/shepherd/main.go           # Entry point
+baa/
+├── cmd/baa/main.go           # Entry point
 ├── internal/
 │   ├── ui/                        # Bubbletea TUI (model, views, styles, components)
 │   ├── pkgmanager/                # PackageManager interface + implementations

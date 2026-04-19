@@ -1,14 +1,14 @@
 .PHONY: build run clean install
 
-BINARY  := shepherd
-CMD     := ./cmd/shepherd
+BINARY  := baa
+CMD     := ./cmd/baa
 LDFLAGS := -s -w
 
-## build: Compile the binary to ./shepherd
+## build: Compile the binary to ./baa
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(BINARY) $(CMD)
 
-## run: Build and run Shepherd
+## run: Build and run BAA
 run: build
 	./$(BINARY)
 

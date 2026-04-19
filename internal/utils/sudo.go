@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jstreitb/shepherd/internal/pkgmanager"
+	"github.com/jstreitb/baa/internal/pkgmanager"
 )
 
 // ZeroBytes overwrites every element of b with zero.

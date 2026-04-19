@@ -1,6 +1,6 @@
-# Contributing to Shepherd
+# Contributing to BAA
 
-First off — thank you for considering contributing to Shepherd! Every contribution matters, whether it's a bug fix, a new package manager, or a typo correction.
+First off — thank you for considering contributing to BAA! Every contribution matters, whether it's a bug fix, a new package manager, or a typo correction.
 
 ## Table of Contents
 
@@ -15,8 +15,8 @@ First off — thank you for considering contributing to Shepherd! Every contribu
 
 ```bash
 # Fork and clone
-git clone https://github.com/<your-username>/shepherd.git
-cd shepherd
+git clone https://github.com/<your-username>/baa.git
+cd baa
 
 # Install dependencies
 go mod download
@@ -49,7 +49,7 @@ make run
 
 ## Adding a New Package Manager
 
-Shepherd makes it easy to add support for new package managers. Here's how:
+BAA makes it easy to add support for new package managers. Here's how:
 
 1. **Create a new file** in `internal/pkgmanager/` (e.g., `yay.go`).
 2. **Implement the `PackageManager` interface:**
@@ -106,4 +106,4 @@ refactor: simplify animation frame rendering
 
 ---
 
-Thank you for helping make Shepherd better! 🐑
+Thank you for helping make BAA better! 🐑
