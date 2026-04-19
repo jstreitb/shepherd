@@ -29,7 +29,11 @@ func viewLogin(m Model) string {
 	desc := SubtitleStyle.Render("Enter your password to update your system.")
 
 	var names []string
-	for _, mgr := range m.managers {
+	for i, mgr := range m.managers {
+		if i == 3 {
+			names = append(names, "...")
+			break
+		}
 		names = append(names, mgr.Name())
 	}
 	detected := lipgloss.NewStyle().

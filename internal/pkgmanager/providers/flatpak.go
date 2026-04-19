@@ -1,4 +1,4 @@
-package pkgmanager
+package providers
 
 // Flatpak implements PackageManager for Flatpak.
 // Flatpak does not require root privileges for user-scope updates.

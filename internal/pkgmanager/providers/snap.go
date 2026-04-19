@@ -1,4 +1,4 @@
-package pkgmanager
+package providers
 
 // Snap implements PackageManager for Canonical's Snap.
 type Snap struct{}

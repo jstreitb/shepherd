@@ -1,4 +1,4 @@
-package pkgmanager
+package providers
 
 // Apt implements PackageManager for Debian/Ubuntu's apt-get.
 // It uses DEBIAN_FRONTEND=noninteractive and dpkg --force-conf* flags

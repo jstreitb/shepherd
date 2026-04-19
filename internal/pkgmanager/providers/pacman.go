@@ -1,4 +1,4 @@
-package pkgmanager
+package providers
 
 // Pacman implements PackageManager for Arch Linux's pacman.
 type Pacman struct{}
