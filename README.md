@@ -175,7 +175,9 @@ BAA is a community-driven project. A huge thank you to the amazing people who he
 <a href = "https://github.com/jstreitb/baa/graphs/contributors">
   <img src = "https://contrib.rocks/image?repo=jstreitb/baa"/>
 </a>
+</div>
 <br>
+
 
 ## Contributing
 
