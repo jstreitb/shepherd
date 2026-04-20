@@ -172,12 +172,10 @@ BAA is a community-driven project. A huge thank you to the amazing people who he
 
 <br>
 
-<a href="https://github.com/jstreitb/baa/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=jstreitb/baa&max=24&columns=8&anon=1&merge=true" />
+<a href = "https://github.com/jstreitb/baa/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=jstreitb/baa"/>
 </a>
-
-<br><br>
-</div>
+<br>
 
 ## Contributing
 
