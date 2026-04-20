@@ -81,6 +81,7 @@ That's it. No config files, no complicated setup.
 |------|-------------|
 | `--update` | Updates baa to the latest version |
 | `--uninstall` | Uninstalls baa from your system |
+| `--detect` | Shows detected package managers and exit |
 | `--credits` | Shows the credits and exit |
 | `--version` | Prints the current version |
 | `--help` | Shows the help message |
@@ -90,7 +91,11 @@ That's it. No config files, no complicated setup.
 | Manager | Detected via | Sudo | Non-Interactive Flags |
 |---------|-------------|------|-----------------------|
 | **apt** | `apt-get` | ✓ | `DEBIAN_FRONTEND=noninteractive`, `--force-confold` |
+| **dnf** | `dnf` | ✓ | `-y` |
+| **zypper** | `zypper` | ✓ | `--non-interactive`, `up` |
 | **pacman** | `pacman` | ✓ | `--noconfirm` |
+| **nix** | `nix-env` | ✗ | `-u` |
+| **brew** | `brew` | ✗ | `upgrade` |
 | **flatpak** | `flatpak` | ✗ | `-y --noninteractive` |
 | **snap** | `snap` | ✓ | — |
 
