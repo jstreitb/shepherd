@@ -10,10 +10,11 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jstreitb/baa/internal/pkgmanager"
 	"github.com/jstreitb/baa/internal/ui"
+	"github.com/jstreitb/baa/internal/utils"
 )
 
 var version = "dev" // Overridden by GoReleaser using ldflags
@@ -25,8 +26,10 @@ func main() {
 	showHelp := flag.Bool("help", false, "show help message and exit")
 	showCredits := flag.Bool("credits", false, "show credits and exit")
 	showDetected := flag.Bool("detect", false, "show detected package managers and exit")
+	quiet := flag.Bool("quiet", false, "skip the TUI; run updates non-interactively and print a one-line summary per manager")
 	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
 	flag.BoolVar(showDetected, "d", *showDetected, "show detected package managers and exit")
+	flag.BoolVar(quiet, "q", *quiet, "skip the TUI; run updates non-interactively and print a one-line summary per manager")
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -37,6 +40,7 @@ func main() {
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --credits    Show credits and exit\n")
 		fmt.Printf("  --detect     Show detected package managers and exit\n")
+		fmt.Printf("  --quiet      Skip the TUI; run updates non-interactively (set BAA_SUDO_PASSWORD for sudo managers)\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
 
@@ -103,6 +107,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *quiet {
+		os.Exit(runQuiet())
+	}
+
 	// Make version available to the TUI to check for updates
 	ui.AppVersion = version
 
@@ -115,6 +123,67 @@ func main() {
 		fmt.Fprintf(os.Stderr, "baa: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+// runQuiet executes every detected package manager's update sequence
+// without the TUI, printing one summary line per manager. Sudo-needing
+// managers read their password from BAA_SUDO_PASSWORD; if that is
+// unset and at least one manager needs sudo, runQuiet exits non-zero
+// before running anything (so a script does not partially update).
+//
+// Returns the exit code: 0 if every manager succeeded, 1 otherwise.
+func runQuiet() int {
+	managers := pkgmanager.DetectInstalled()
+	if len(managers) == 0 {
+		fmt.Fprintln(os.Stderr, "baa: no package managers detected")
+		return 1
+	}
+
+	var password []byte
+	needsSudo := false
+	for _, mgr := range managers {
+		if mgr.NeedsSudo() {
+			needsSudo = true
+			break
+		}
+	}
+	if needsSudo {
+		pw := os.Getenv("BAA_SUDO_PASSWORD")
+		if pw == "" {
+			fmt.Fprintln(os.Stderr,
+				"baa: --quiet requires BAA_SUDO_PASSWORD when sudo-needing managers are present")
+			return 1
+		}
+		password = []byte(pw)
+		defer utils.ZeroBytes(password)
+	}
+
+	failures := 0
+	for _, mgr := range managers {
+		fmt.Printf("▶ %s... ", mgr.Name())
+		// outputCh is drained but its contents are dropped to keep
+		// quiet mode actually quiet; only the final summary is shown.
+		outputCh := make(chan string, 64)
+		go func() {
+			for range outputCh {
+			}
+		}()
+		result := utils.RunManagerUpdate(password, mgr, outputCh)
+		if result.Success {
+			fmt.Printf("ok (%s)\n", result.Duration.Round(1e9))
+		} else {
+			failures++
+			fmt.Printf("failed (%s)\n", result.Duration.Round(1e9))
+			if result.Error != "" {
+				fmt.Fprintf(os.Stderr, "  %s\n", result.Error)
+			}
+		}
+	}
+
+	if failures > 0 {
+		return 1
+	}
+	return 0
 }
 
 func printCredits() {
