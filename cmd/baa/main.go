@@ -14,6 +14,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jstreitb/baa/internal/pkgmanager"
 	"github.com/jstreitb/baa/internal/ui"
+	"github.com/jstreitb/baa/internal/utils"
+	"golang.org/x/term"
 )
 
 var version = "dev" // Overridden by GoReleaser using ldflags
@@ -25,8 +27,10 @@ func main() {
 	showHelp := flag.Bool("help", false, "show help message and exit")
 	showCredits := flag.Bool("credits", false, "show credits and exit")
 	showDetected := flag.Bool("detect", false, "show detected package managers and exit")
+	quietMe := flag.Bool("quiet", false, "run updates silently in the background (suppresses TUI)")
 	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
 	flag.BoolVar(showDetected, "d", *showDetected, "show detected package managers and exit")
+	flag.BoolVar(quietMe, "q", *quietMe, "run updates silently in the background")
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -37,6 +41,7 @@ func main() {
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --credits    Show credits and exit\n")
 		fmt.Printf("  --detect     Show detected package managers and exit\n")
+		fmt.Printf("  --quiet, -q Run updates silently in the background\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
 
@@ -66,6 +71,48 @@ func main() {
 		fmt.Println("baa has detected the following managers:")
 		for _, manager := range found {
 			fmt.Println("-", manager.Name())
+		}
+		os.Exit(0)
+	}
+
+	if *quietMe {
+		// Quiet mode: detect managers and run updates silently, only printing errors.
+		managers := pkgmanager.DetectInstalled()
+		if len(managers) == 0 {
+			fmt.Println("baa: no package managers detected.")
+			os.Exit(0)
+		}
+
+		// In quiet mode, try to read sudo password from stdin if any manager needs sudo.
+		needsSudo := false
+		for _, mgr := range managers {
+			if mgr.NeedsSudo() {
+				needsSudo = true
+				break
+			}
+		}
+
+		var password []byte
+		if needsSudo {
+			fmt.Print("baa: [quiet mode] sudo password: ")
+			password, _ = term.ReadPassword(int(os.Stdin.Fd()))
+			fmt.Println()
+		}
+
+		fmt.Println("baa: running updates in quiet mode...")
+		// Use a nil channel — utils.RunManagerUpdate handles it gracefully
+		// since it checks for nil before sending (non-blocking select default).
+		// We pass nil to suppress all streaming output in quiet mode.
+		hasErrors := false
+		for _, mgr := range managers {
+			result := utils.RunManagerUpdateQuiet(password, mgr)
+			if !result.Success {
+				fmt.Fprintf(os.Stderr, "baa: error updating %s: %s\n", result.Manager, result.Error)
+				hasErrors = true
+			}
+		}
+		if !hasErrors {
+			fmt.Println("baa: all updates completed successfully.")
 		}
 		os.Exit(0)
 	}

@@ -146,3 +146,36 @@ func RunManagerUpdate(password []byte, mgr pkgmanager.PackageManager, outputCh c
 		Duration: time.Since(start),
 	}
 }
+
+// RunManagerUpdateQuiet runs all update commands for the given PackageManager
+// without streaming output. It returns the result with no console output.
+// This is useful for quiet/background update modes.
+func RunManagerUpdateQuiet(password []byte, mgr pkgmanager.PackageManager) pkgmanager.UpdateResult {
+	start := time.Now()
+	var allOutput strings.Builder
+
+	for _, cmdArgs := range mgr.Commands() {
+		out, err := RunCommand(password, mgr.NeedsSudo(), cmdArgs, mgr.Env(), nil)
+		allOutput.WriteString(out)
+		if err != nil {
+			errStr := strings.TrimSpace(out)
+			if errStr == "" {
+				errStr = err.Error()
+			}
+			return pkgmanager.UpdateResult{
+				Manager:  mgr.Name(),
+				Success:  false,
+				Output:   allOutput.String(),
+				Error:    SanitizeError(errStr, 500),
+				Duration: time.Since(start),
+			}
+		}
+	}
+
+	return pkgmanager.UpdateResult{
+		Manager:  mgr.Name(),
+		Success:  true,
+		Output:   allOutput.String(),
+		Duration: time.Since(start),
+	}
+}
