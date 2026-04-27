@@ -9,9 +9,6 @@ One command. One password. Every package manager updated.
 <br>
 </div>
 
-> [!IMPORTANT]
-> **YOU HAVE TO UPDATE MANUALLY!** I broke the update script, so you have to update manually this update. In this version it's functioning again. Sorry!
-
 <div align="center">
 <br>
 </div>
