@@ -1,6 +1,17 @@
 <div align="center">
 
-# 🐑 BAA 🐑
+# ⚠️ DEPRECATED
+
+> [!IMPORTANT]
+> **This version is no longer maintained.** This codebase was the result of a "spaghetti code" weekend project. 
+> We have completely rewritten the entire application from scratch with a professional architecture.
+
+### 👉 [GO TO THE NEW MAIN BRANCH](https://github.com/jstreitb/baa) 👈
+**Please use the official main branch.**
+
+---
+
+# 🐑 BAA (Legacy) 🐑
 
 **The universal Linux package manager updater.**
 
