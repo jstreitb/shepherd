@@ -6,7 +6,6 @@
 
 One command. One password. Every package manager updated.
 
-<br>
 ⭐ **If you find BAA useful, consider giving it a star!**
 <br>
 </div>
