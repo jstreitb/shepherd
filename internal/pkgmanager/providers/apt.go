@@ -5,8 +5,8 @@ package providers
 // to suppress all interactive prompts during unattended upgrades.
 type Apt struct{}
 
-func (a *Apt) Name() string     { return "apt" }
-func (a *Apt) NeedsSudo() bool   { return true }
+func (a *Apt) Name() string    { return "apt" }
+func (a *Apt) NeedsSudo() bool { return true }
 
 func (a *Apt) Commands() [][]string {
 	return [][]string{

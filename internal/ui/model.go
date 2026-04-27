@@ -1,10 +1,7 @@
 package ui
 
 import (
-	"fmt"
-	"net/http"
-	"os/exec"
-	"strings"
+	"context"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -12,22 +9,13 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/jstreitb/baa/internal/config"
+	"github.com/jstreitb/baa/internal/detector"
 	"github.com/jstreitb/baa/internal/pkgmanager"
+	"github.com/jstreitb/baa/internal/sanitize"
+	"github.com/jstreitb/baa/internal/theme"
 	"github.com/jstreitb/baa/internal/ui/components"
-	"github.com/jstreitb/baa/internal/utils"
-)
-
-// ─── Application States ────────────────────────────────────────────────────
-
-// State represents a screen in the TUI state machine.
-type State int
-
-const (
-	StateInit     State = iota // Silently detect package managers.
-	StateLogin                 // Prompt for sudo password.
-	StateUpdating              // Run updates sequentially.
-	StateFailed                // A manager failed; offer retry.
-	StateSummary               // Show final results.
+	"github.com/jstreitb/baa/internal/updater"
 )
 
 // ─── Internal Messages ─────────────────────────────────────────────────────
@@ -50,42 +38,38 @@ type interactiveDoneMsg struct{ err error }
 // checkUpdateMsg carries the latest version from GitHub, or empty if check failed/none.
 type checkUpdateMsg string
 
-// AppVersion is injected by main.go from ldflags.
-var AppVersion = "dev"
-
 // ─── Model ─────────────────────────────────────────────────────────────────
 
 // Model is the top-level Bubbletea model for BAA.
+// It is a thin UI shell that delegates execution concerns to the Orchestrator.
 type Model struct {
 	state  State
 	width  int
 	height int
-
-	// Detection results.
-	managers []pkgmanager.PackageManager
 
 	// Update info
 	latestVersion string
 
 	// Login screen.
 	textInput textinput.Model
-	password  []byte
 
-	// Update screen.
-	currentMgr int
-	lastLine   string
-	outputCh   chan string
-	resultCh   chan pkgmanager.UpdateResult
-	animation  components.Animation
-	spinner    spinner.Model
+	// Display components.
+	animation components.Animation
+	spinner   spinner.Model
 
-	// Results.
-	results  []pkgmanager.UpdateResult
 	quitting bool
+
+	// Injected dependencies.
+	cfg      config.Config
+	checker  updater.VersionChecker
+	detector *detector.Detector
+
+	// Execution orchestration (pointer: shared across Bubble Tea copies).
+	orch *Orchestrator
 }
 
 // NewModel constructs the initial Model ready for tea.NewProgram.
-func NewModel() Model {
+func NewModel(cfg config.Config, checker updater.VersionChecker, det *detector.Detector) Model {
 	ti := textinput.New()
 	ti.Placeholder = "sudo password"
 	ti.EchoMode = textinput.EchoPassword
@@ -98,7 +82,11 @@ func NewModel() Model {
 		state:     StateInit,
 		textInput: ti,
 		animation: components.NewAnimation(),
-		spinner:   components.NewSpinner(ColorMauve),
+		spinner:   components.NewSpinner(theme.ColorMauve),
+		cfg:       cfg,
+		checker:   checker,
+		detector:  det,
+		orch:      NewOrchestrator(),
 	}
 }
 
@@ -106,52 +94,33 @@ func NewModel() Model {
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		textinput.Blink,
-		detectManagersCmd,
-		checkUpdateCmd(),
+		m.detectManagersCmd(),
+		m.checkUpdateCmd(),
 		m.spinner.Tick,
 	)
 }
 
-func checkUpdateCmd() tea.Cmd {
+func (m *Model) checkUpdateCmd() tea.Cmd {
 	return func() tea.Msg {
-		if AppVersion == "test-update" {
-			// Fake an update for testing purposes
-			return checkUpdateMsg("2.0.0-PRO-EDITION")
-		}
-		if AppVersion == "dev" {
+		if m.checker == nil {
 			return checkUpdateMsg("")
 		}
-
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse // Don't follow redirect, just read Location
-			},
-			Timeout: 2 * time.Second,
-		}
-		res, err := client.Get("https://github.com/jstreitb/baa/releases/latest")
+		latest, err := m.checker.LatestVersion(context.Background(), m.cfg.Version)
 		if err != nil {
 			return checkUpdateMsg("")
 		}
-		defer res.Body.Close()
-
-		loc, err := res.Location()
-		if err == nil && loc != nil && strings.Contains(loc.Path, "/tag/") {
-			parts := strings.Split(loc.Path, "/")
-			latest := parts[len(parts)-1]
-			latest = strings.TrimPrefix(latest, "v")
-			curr := strings.TrimPrefix(AppVersion, "v")
-
-			if latest != "" && latest != curr {
-				return checkUpdateMsg(latest)
-			}
-		}
-		return checkUpdateMsg("")
+		return checkUpdateMsg(latest)
 	}
 }
 
 // detectManagersCmd runs package manager detection in a background goroutine.
-func detectManagersCmd() tea.Msg {
-	return detectDoneMsg{managers: pkgmanager.DetectInstalled()}
+func (m *Model) detectManagersCmd() tea.Cmd {
+	return func() tea.Msg {
+		if m.detector == nil {
+			return detectDoneMsg{managers: nil}
+		}
+		return detectDoneMsg{managers: m.detector.DetectInstalled()}
+	}
 }
 
 // ─── Update (top-level dispatcher) ─────────────────────────────────────────
@@ -166,8 +135,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, keys.Quit) && m.state != StateLogin && m.state != StateFailed {
 			m.quitting = true
-			// Zero password before exit.
-			utils.ZeroBytes(m.password)
+			m.orch.Cleanup()
 			return m, tea.Quit
 		}
 	}
@@ -195,8 +163,8 @@ func (m Model) updateInit(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.latestVersion = string(msg)
 		return m, nil
 	case detectDoneMsg:
-		m.managers = msg.managers
-		if len(m.managers) == 0 {
+		m.orch.SetManagers(msg.managers)
+		if len(msg.managers) == 0 {
 			// Nothing to do — skip straight to summary.
 			m.state = StateSummary
 			return m, nil
@@ -223,14 +191,16 @@ func (m Model) updateLogin(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, keys.Submit):
-			// Capture password as []byte (never as string in our domain).
-			m.password = []byte(m.textInput.Value())
+			// Capture password securely.
+			raw := []byte(m.textInput.Value())
 			m.textInput.SetValue("") // Clear display immediately.
 			m.textInput.Blur()
+			m.orch.SetPassword(raw)
+			m.orch.BeginUpdating()
 			m.state = StateUpdating
-			m.currentMgr = 0
 			return m, tea.Batch(
-				m.startManagerUpdate(),
+				m.orch.StartUpdate(),
+				m.spinner.Tick,
 				components.AnimTickCmd(200*time.Millisecond),
 			)
 		}
@@ -246,21 +216,23 @@ func (m Model) updateLogin(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) updateUpdating(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case outputLineMsg:
-		m.lastLine = string(msg)
-		return m, waitForOutput(m.outputCh)
+		m.orch.SetLastLine(string(msg))
+		return m, waitForOutput(m.orch.OutputCh())
 
 	case outputDoneMsg:
 		// Stream ended; result will arrive shortly.
 		return m, nil
 
 	case managerDoneMsg:
-		m.results = append(m.results, msg.result)
-		if !msg.result.Success {
+		ok := m.orch.AddResult(msg.result)
+		if !ok {
 			// Offer interactive retry.
 			m.state = StateFailed
 			return m, nil
 		}
-		return m, m.advanceToNextManager()
+		state, cmd := m.orch.Advance()
+		m.state = state
+		return m, cmd
 
 	case components.AnimTickMsg:
 		m.animation.NextFrame()
@@ -281,28 +253,26 @@ func (m Model) updateFailed(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.Retry):
-			// Drop to raw terminal for interactive resolution.
-			return m, m.interactiveRetry()
+			return m, m.orch.InteractiveRetry()
 		case key.Matches(msg, keys.Skip):
-			return m, m.advanceToNextManager()
+			state, cmd := m.orch.Advance()
+			m.state = state
+			return m, cmd
 		case key.Matches(msg, keys.Quit):
 			m.quitting = true
-			utils.ZeroBytes(m.password)
+			m.orch.Cleanup()
 			return m, tea.Quit
 		}
 
 	case interactiveDoneMsg:
-		// Overwrite the last (failed) result.
-		if len(m.results) > 0 {
-			last := &m.results[len(m.results)-1]
-			if msg.err == nil {
-				last.Success = true
-				last.Error = ""
-			} else {
-				last.Error = utils.SanitizeError(msg.err.Error(), 120)
-			}
+		if msg.err == nil {
+			m.orch.OverwriteLastResult(true, "")
+		} else {
+			m.orch.OverwriteLastResult(false, sanitize.SanitizeError(msg.err.Error(), 120))
 		}
-		return m, m.advanceToNextManager()
+		state, cmd := m.orch.Advance()
+		m.state = state
+		return m, cmd
 	}
 	return m, nil
 }
@@ -314,77 +284,119 @@ func (m Model) updateSummary(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, keys.Quit) {
 			m.quitting = true
-			utils.ZeroBytes(m.password)
+			m.orch.Cleanup()
 			return m, tea.Quit
 		}
-		_ = msg
 	}
 	return m, nil
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── View ───────────────────────────────────────────────────────────────────
 
-// startManagerUpdate launches the current manager's update in a goroutine
-// and returns Cmds to listen for output and the final result.
-func (m *Model) startManagerUpdate() tea.Cmd {
-	mgr := m.managers[m.currentMgr]
-	m.outputCh = make(chan string, 128)
-	m.resultCh = make(chan pkgmanager.UpdateResult, 1)
-	m.lastLine = ""
-
-	pw := make([]byte, len(m.password))
-	copy(pw, m.password)
-
-	go func() {
-		result := utils.RunManagerUpdate(pw, mgr, m.outputCh)
-		utils.ZeroBytes(pw) // Zero the copy.
-		m.resultCh <- result
-	}()
-
-	return tea.Batch(
-		waitForOutput(m.outputCh),
-		waitForResult(m.resultCh),
-		m.spinner.Tick,
-	)
+// View renders the current state by projecting Model into typed ViewData.
+func (m Model) View() string {
+	if m.quitting {
+		return ""
+	}
+	switch m.state {
+	case StateInit:
+		return viewInit(m.initViewData())
+	case StateLogin:
+		return viewLogin(m.loginViewData())
+	case StateUpdating:
+		return viewUpdating(m.updatingViewData())
+	case StateFailed:
+		return viewFailed(m.failedViewData())
+	case StateSummary:
+		return viewSummary(m.summaryViewData())
+	}
+	return ""
 }
 
-// advanceToNextManager moves to the next manager or finishes.
-func (m *Model) advanceToNextManager() tea.Cmd {
-	m.currentMgr++
-	if m.currentMgr < len(m.managers) {
-		m.state = StateUpdating
-		return tea.Batch(
-			m.startManagerUpdate(),
-			components.AnimTickCmd(200*time.Millisecond),
-		)
-	}
-	// All done — zero password and show summary.
-	utils.ZeroBytes(m.password)
-	m.state = StateSummary
-	return nil
+// ─── ViewData Projections ──────────────────────────────────────────────────
+
+func (m Model) layout() Layout {
+	return Layout{Width: m.width, Height: m.height}
 }
 
-// interactiveRetry suspends the TUI and re-runs the failed manager's
-// commands with full terminal I/O so the user can answer any prompts.
-func (m *Model) interactiveRetry() tea.Cmd {
-	mgr := m.managers[m.currentMgr]
-	var parts []string
-	for _, cmd := range mgr.Commands() {
-		parts = append(parts, strings.Join(cmd, " "))
+func (m Model) initViewData() InitViewData {
+	return InitViewData{
+		Layout:      m.layout(),
+		SpinnerView: m.spinner.View(),
 	}
-	script := strings.Join(parts, " && ")
-
-	var c *exec.Cmd
-	if mgr.NeedsSudo() {
-		c = exec.Command("sudo", "bash", "-c", script)
-	} else {
-		c = exec.Command("bash", "-c", script)
-	}
-
-	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return interactiveDoneMsg{err: err}
-	})
 }
+
+func (m Model) loginViewData() LoginViewData {
+	mgrs := m.orch.Managers()
+	names := make([]string, 0, len(mgrs))
+	for i, mgr := range mgrs {
+		if i == 3 {
+			names = append(names, "...")
+			break
+		}
+		names = append(names, mgr.Name())
+	}
+	return LoginViewData{
+		Layout:        m.layout(),
+		ManagerNames:  names,
+		TextInputView: m.textInput.View(),
+		LatestVersion: m.latestVersion,
+	}
+}
+
+func (m Model) updatingViewData() UpdatingViewData {
+	mgr := m.orch.CurrentManager()
+	name := ""
+	if mgr != nil {
+		name = mgr.Name()
+	}
+	return UpdatingViewData{
+		Layout:         m.layout(),
+		ManagerName:    name,
+		CurrentIndex:   m.orch.CurrentIndex(),
+		TotalManagers:  len(m.orch.Managers()),
+		AnimationFrame: m.animation.Frame(),
+		LastLogLine:    m.orch.LastLine(),
+		SpinnerView:    m.spinner.View(),
+		PastResults:    toViewResults(m.orch.Results()),
+	}
+}
+
+func (m Model) failedViewData() FailedViewData {
+	results := m.orch.Results()
+	d := FailedViewData{Layout: m.layout()}
+	if len(results) > 0 {
+		last := results[len(results)-1]
+		d.ManagerName = last.Manager
+		d.ErrorMsg = last.Error
+	}
+	return d
+}
+
+func (m Model) summaryViewData() SummaryViewData {
+	return SummaryViewData{
+		Layout:        m.layout(),
+		HasManagers:   len(m.orch.Managers()) > 0,
+		Results:       toViewResults(m.orch.Results()),
+		LatestVersion: m.latestVersion,
+	}
+}
+
+// toViewResults converts domain results to presentation-only structs.
+func toViewResults(results []pkgmanager.UpdateResult) []ViewResult {
+	out := make([]ViewResult, len(results))
+	for i, r := range results {
+		out[i] = ViewResult{
+			Manager:  r.Manager,
+			Success:  r.Success,
+			Error:    r.Error,
+			Duration: r.Duration,
+		}
+	}
+	return out
+}
+
+// ─── Channel Helpers ────────────────────────────────────────────────────────
 
 // waitForOutput returns a Cmd that blocks until a line arrives on ch.
 func waitForOutput(ch <-chan string) tea.Cmd {
@@ -404,31 +416,3 @@ func waitForResult(ch <-chan pkgmanager.UpdateResult) tea.Cmd {
 	}
 }
 
-// View renders the current state.
-func (m Model) View() string {
-	if m.quitting {
-		return ""
-	}
-	switch m.state {
-	case StateInit:
-		return viewInit(m)
-	case StateLogin:
-		return viewLogin(m)
-	case StateUpdating:
-		return viewUpdating(m)
-	case StateFailed:
-		return viewFailed(m)
-	case StateSummary:
-		return viewSummary(m)
-	}
-	return ""
-}
-
-// managerNames returns a formatted string of detected manager names.
-func (m Model) managerNames() string {
-	names := make([]string, len(m.managers))
-	for i, mgr := range m.managers {
-		names[i] = fmt.Sprintf("• %s", mgr.Name())
-	}
-	return strings.Join(names, "  ")
-}

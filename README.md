@@ -14,8 +14,8 @@ One command. One password. Every package manager updated.
 <br>
 </div>
 
-> [!IMPORTANT]
-> **Shepherd is now BAA!** The project has been renamed. Please update your software to the latest version: all commands now start with `baa` instead of `shepherd`.
+> [!NOTE]
+> **From Weekend Project to Clean Code:** BAA was originally planned as a quick weekend project, which resulted in the old codebase becoming absolute spaghetti code. To ensure maintainability, security, and testability, we have completely rewritten the application from scratch with a modular, enterprise-ready architecture.
 
 <div align="center">
 <br>

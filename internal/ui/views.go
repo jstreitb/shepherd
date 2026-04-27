@@ -6,16 +6,17 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jstreitb/baa/internal/theme"
 )
 
 // ─── View: Init ─────────────────────────────────────────────────────────────
 
-func viewInit(m Model) string {
-	return centerVertically(m,
+func viewInit(d InitViewData) string {
+	return centerVertically(d.Width, d.Height,
 		lipgloss.JoinVertical(lipgloss.Center,
 			TitleStyle.Render("🐑 baa"),
 			"",
-			m.spinner.View()+"  "+SubtitleStyle.Render("Detecting package managers…"),
+			d.SpinnerView+"  "+SubtitleStyle.Render("Detecting package managers…"),
 		),
 	)
 }
@@ -23,33 +24,23 @@ func viewInit(m Model) string {
 // ─── View: Login ────────────────────────────────────────────────────────────
 // Minimalist: title, description, detected list, password field, "Next".
 
-func viewLogin(m Model) string {
+func viewLogin(d LoginViewData) string {
 	title := TitleStyle.Render("🐑 baa")
 
 	desc := SubtitleStyle.Render("Enter your password to update your system.")
 
-	var names []string
-	for i, mgr := range m.managers {
-		if i == 3 {
-			names = append(names, "...")
-			break
-		}
-		names = append(names, mgr.Name())
-	}
 	detected := lipgloss.NewStyle().
-		Foreground(ColorOverlay0).
-		Render("Detected:  " + strings.Join(names, "  ·  "))
-
-	field := m.textInput.View()
+		Foreground(theme.ColorOverlay0).
+		Render("Detected:  " + strings.Join(d.ManagerNames, "  ·  "))
 
 	next := HelpStyle.Render("Next →   (Press Enter)")
 
 	var updateHint string
-	if m.latestVersion != "" {
-		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update` later", m.latestVersion))
+	if d.LatestVersion != "" {
+		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update` later", d.LatestVersion))
 	}
 
-	return centerVertically(m,
+	return centerVertically(d.Width, d.Height,
 		lipgloss.JoinVertical(lipgloss.Center,
 			title,
 			"",
@@ -57,7 +48,7 @@ func viewLogin(m Model) string {
 			detected,
 			"",
 			"",
-			field,
+			d.TextInputView,
 			"",
 			"",
 			next,
@@ -69,21 +60,19 @@ func viewLogin(m Model) string {
 
 // ─── View: Updating ─────────────────────────────────────────────────────────
 
-func viewUpdating(m Model) string {
-	mgr := m.managers[m.currentMgr]
-
+func viewUpdating(d UpdatingViewData) string {
 	header := StatusStyle.Render(
-		fmt.Sprintf("%s  Updating %s…", m.spinner.View(), mgr.Name()),
+		fmt.Sprintf("%s  Updating %s…", d.SpinnerView, d.ManagerName),
 	)
 	progress := SubtitleStyle.Render(
-		fmt.Sprintf("%d / %d", m.currentMgr+1, len(m.managers)),
+		fmt.Sprintf("%d / %d", d.CurrentIndex+1, d.TotalManagers),
 	)
 
 	animFrame := BoxStyle.
-		Foreground(ColorMauve).
-		Render(m.animation.Frame())
+		Foreground(theme.ColorMauve).
+		Render(d.AnimationFrame)
 
-	logLine := m.lastLine
+	logLine := d.LastLogLine
 	if len(logLine) > 72 {
 		logLine = logLine[:69] + "..."
 	}
@@ -91,7 +80,7 @@ func viewUpdating(m Model) string {
 
 	// Previously completed managers.
 	var done []string
-	for _, r := range m.results {
+	for _, r := range d.PastResults {
 		icon := SuccessStyle.Render("✓")
 		if !r.Success {
 			icon = ErrorStyle.Render("✗")
@@ -113,31 +102,29 @@ func viewUpdating(m Model) string {
 		parts = append(parts, "", strings.Join(done, "\n"))
 	}
 
-	return centerVertically(m, lipgloss.JoinVertical(lipgloss.Center, parts...))
+	return centerVertically(d.Width, d.Height, lipgloss.JoinVertical(lipgloss.Center, parts...))
 }
 
 // ─── View: Failed ───────────────────────────────────────────────────────────
 
-func viewFailed(m Model) string {
-	last := m.results[len(m.results)-1]
-
-	header := ErrorStyle.Render(fmt.Sprintf("✗  %s failed", last.Manager))
+func viewFailed(d FailedViewData) string {
+	header := ErrorStyle.Render(fmt.Sprintf("✗  %s failed", d.ManagerName))
 
 	errMsg := ""
-	if last.Error != "" {
+	if d.ErrorMsg != "" {
 		errMsg = lipgloss.NewStyle().
-			Foreground(ColorPeach).
-			Render(last.Error)
+			Foreground(theme.ColorPeach).
+			Render(d.ErrorMsg)
 	}
 
 	options := lipgloss.JoinVertical(lipgloss.Left,
 		"",
-		lipgloss.NewStyle().Foreground(ColorText).Render("  r   Retry interactively"),
-		lipgloss.NewStyle().Foreground(ColorSubtext0).Render("  s   Skip"),
-		lipgloss.NewStyle().Foreground(ColorOverlay0).Render("  q   Quit"),
+		lipgloss.NewStyle().Foreground(theme.ColorText).Render("  r   Retry interactively"),
+		lipgloss.NewStyle().Foreground(theme.ColorSubtext0).Render("  s   Skip"),
+		lipgloss.NewStyle().Foreground(theme.ColorOverlay0).Render("  q   Quit"),
 	)
 
-	return centerVertically(m,
+	return centerVertically(d.Width, d.Height,
 		lipgloss.JoinVertical(lipgloss.Center,
 			header,
 			"",
@@ -150,26 +137,26 @@ func viewFailed(m Model) string {
 
 // ─── View: Summary ──────────────────────────────────────────────────────────
 
-func viewSummary(m Model) string {
-	if len(m.managers) == 0 {
-		return centerVertically(m,
+func viewSummary(d SummaryViewData) string {
+	if !d.HasManagers {
+		return centerVertically(d.Width, d.Height,
 			lipgloss.JoinVertical(lipgloss.Center,
 				TitleStyle.Render("🐑 baa"),
 				"",
 				WarningStyle.Render("No supported package managers found."),
-				SubtitleStyle.Render("Supported: apt, pacman, flatpak, snap"),
+				SubtitleStyle.Render("Supported: apt, brew, dnf, flatpak, nix, pacman, snap, zypper"),
 				"",
 				HelpStyle.Render("Press q to exit"),
 			),
 		)
 	}
 
-	divider := lipgloss.NewStyle().Foreground(ColorSurface1).
+	divider := lipgloss.NewStyle().Foreground(theme.ColorSurface1).
 		Render(strings.Repeat("─", 36))
 
 	allOK := true
 	var rows []string
-	for _, r := range m.results {
+	for _, r := range d.Results {
 		icon := SuccessStyle.Render("✓")
 		if !r.Success {
 			icon = ErrorStyle.Render("✗")
@@ -182,9 +169,9 @@ func viewSummary(m Model) string {
 		if !r.Success && r.Error != "" {
 			rows = append(rows,
 				lipgloss.NewStyle().
-					Foreground(ColorPeach).
+					Foreground(theme.ColorPeach).
 					PaddingLeft(5).
-					Render("↳ "+last_error_line(r.Error)),
+					Render("↳ "+LastErrorLine(r.Error)),
 			)
 		}
 	}
@@ -193,13 +180,13 @@ func viewSummary(m Model) string {
 	if !allOK {
 		status = WarningStyle.Render("Some updates had issues.")
 	}
-	
+
 	var updateHint string
-	if m.latestVersion != "" {
-		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update`", m.latestVersion))
+	if d.LatestVersion != "" {
+		updateHint = WarningStyle.Render(fmt.Sprintf("Update available: v%s! Run `baa --update`", d.LatestVersion))
 	}
 
-	return centerVertically(m,
+	return centerVertically(d.Width, d.Height,
 		lipgloss.JoinVertical(lipgloss.Center,
 			TitleStyle.Render("🐑 Update Complete"),
 			"",
@@ -220,27 +207,27 @@ func viewSummary(m Model) string {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-func centerVertically(m Model, content string) string {
+func centerVertically(width, height int, content string) string {
 	h := lipgloss.Height(content)
 	pad := 0
-	if m.height > h {
-		pad = (m.height - h) / 2
+	if height > h {
+		pad = (height - h) / 2
 	}
 	return lipgloss.NewStyle().
-		Width(m.width).
+		Width(width).
 		PaddingTop(pad).
 		Align(lipgloss.Center).
 		Render(content)
 }
 
-// last_error_line returns the last non-empty line of an error string,
+// LastErrorLine returns the last non-empty line of an error string,
 // which is usually the most relevant part.
-func last_error_line(s string) string {
+func LastErrorLine(s string) string {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	for i := len(lines) - 1; i >= 0; i-- {
 		if l := strings.TrimSpace(lines[i]); l != "" {
 			return l
 		}
 	}
-	return s
+	return strings.TrimSpace(s)
 }

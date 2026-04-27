@@ -10,10 +10,13 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jstreitb/baa/internal/pkgmanager"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/jstreitb/baa/internal/config"
+	"github.com/jstreitb/baa/internal/detector"
+	"github.com/jstreitb/baa/internal/theme"
 	"github.com/jstreitb/baa/internal/ui"
+	"github.com/jstreitb/baa/internal/updater"
 )
 
 var version = "dev" // Overridden by GoReleaser using ldflags
@@ -24,9 +27,7 @@ func main() {
 	uninstallMe := flag.Bool("uninstall", false, "uninstall baa from the system")
 	showHelp := flag.Bool("help", false, "show help message and exit")
 	showCredits := flag.Bool("credits", false, "show credits and exit")
-	showDetected := flag.Bool("detect", false, "show detected package managers and exit")
 	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
-	flag.BoolVar(showDetected, "d", *showDetected, "show detected package managers and exit")
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -36,7 +37,6 @@ func main() {
 		fmt.Printf("  --uninstall  Uninstall baa from the system\n")
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --credits    Show credits and exit\n")
-		fmt.Printf("  --detect     Show detected package managers and exit\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
 
@@ -54,19 +54,6 @@ func main() {
 
 	if *showCredits {
 		printCredits()
-		os.Exit(0)
-	}
-
-	if *showDetected {
-		found := pkgmanager.DetectInstalled()
-		if len(found) == 0 {
-			fmt.Println("baa has detected no package managers.")
-			os.Exit(0)
-		}
-		fmt.Println("baa has detected the following managers:")
-		for _, manager := range found {
-			fmt.Println("-", manager.Name())
-		}
 		os.Exit(0)
 	}
 
@@ -103,11 +90,27 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Make version available to the TUI to check for updates
-	ui.AppVersion = version
+	cfg := config.Config{
+		Version: version,
+		Repo:    "jstreitb/baa",
+	}
+
+	// Decide which update checker to inject based on build version.
+	// Dev builds skip the network call entirely; test builds use a static response.
+	var checker updater.VersionChecker
+	switch version {
+	case "dev", "":
+		// No update checking in development mode.
+	case "test-update":
+		checker = &updater.StaticChecker{Version: "2.0.0-PRO-EDITION"}
+	default:
+		checker = updater.NewGitHubChecker(cfg.Repo)
+	}
+
+	det := detector.New(detector.DefaultRunner{})
 
 	p := tea.NewProgram(
-		ui.NewModel(),
+		ui.NewModel(cfg, checker, det),
 		tea.WithAltScreen(),
 	)
 
@@ -118,22 +121,17 @@ func main() {
 }
 
 func printCredits() {
-	// Color palette from Catppuccin Macchiato
-	colorGreen := lipgloss.Color("#a6da95")
-	colorLavender := lipgloss.Color("#b7bdf8")
-	colorSubtext0 := lipgloss.Color("#a5adcb")
-
 	// Styles
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(colorGreen)
+		Foreground(theme.ColorGreen)
 
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(colorLavender).
+		Foreground(theme.ColorLavender).
 		Bold(true)
 
 	contentStyle := lipgloss.NewStyle().
-		Foreground(colorSubtext0)
+		Foreground(theme.ColorSubtext0)
 
 	// Build sections
 	title := titleStyle.Render("🐑 baa — The update herd")
