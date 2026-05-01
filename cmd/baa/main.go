@@ -14,7 +14,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jstreitb/baa/internal/config"
 	"github.com/jstreitb/baa/internal/detector"
-	"github.com/jstreitb/baa/internal/theme"
+	"github.com/jstreitb/baa/internal/executor"
+	"github.com/jstreitb/baa/internal/pkgmanager"
 	"github.com/jstreitb/baa/internal/ui"
 	"github.com/jstreitb/baa/internal/updater"
 )
@@ -27,7 +28,9 @@ func main() {
 	uninstallMe := flag.Bool("uninstall", false, "uninstall baa from the system")
 	showHelp := flag.Bool("help", false, "show help message and exit")
 	showCredits := flag.Bool("credits", false, "show credits and exit")
+	quiet := flag.Bool("quiet", false, "run without TUI, output only errors")
 	flag.BoolVar(showCredits, "c", *showCredits, "show credits and exit")
+	flag.BoolVar(quiet, "q", *quiet, "run without TUI, output only errors")
 
 	flag.Usage = func() {
 		fmt.Printf("BAA — A universal, autonomous Linux package manager updater.\n\n")
@@ -37,6 +40,7 @@ func main() {
 		fmt.Printf("  --uninstall  Uninstall baa from the system\n")
 		fmt.Printf("  --version    Print version and exit\n")
 		fmt.Printf("  --credits    Show credits and exit\n")
+		fmt.Printf("  --quiet, -q  Run without TUI, output only errors\n")
 		fmt.Printf("  --help       Show this help message and exit\n")
 	}
 
@@ -90,6 +94,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Quiet mode: skip TUI and run updates directly
+	if *quiet {
+		runQuietMode()
+		os.Exit(0)
+	}
+
 	cfg := config.Config{
 		Version: version,
 		Repo:    "jstreitb/baa",
@@ -120,18 +130,57 @@ func main() {
 	}
 }
 
+// runQuietMode runs package manager updates without the TUI.
+// Only errors are printed; successful updates produce no output.
+func runQuietMode() {
+	det := detector.New(detector.DefaultRunner{})
+	managers := det.DetectInstalled()
+
+	if len(managers) == 0 {
+		// No package managers found — not an error, just nothing to do
+		return
+	}
+
+	var errors []string
+	for _, mgr := range managers {
+		outputCh := make(chan string, 64)
+		resultCh := make(chan pkgmanager.UpdateResult, 1)
+
+		// Run update in background
+		go func(m pkgmanager.PackageManager) {
+			result := executor.RunManagerUpdate(nil, m, outputCh)
+			resultCh <- result
+		}(mgr)
+
+		// Drain output channel (we don't display it in quiet mode)
+		go func() {
+			for range outputCh {
+			}
+		}()
+
+		result := <-resultCh
+		if !result.Success && result.Error != "" {
+			errors = append(errors, fmt.Sprintf("%s: %s", mgr.Name(), result.Error))
+		}
+	}
+
+	for _, err := range errors {
+		fmt.Fprintf(os.Stderr, "baa: %s\n", err)
+	}
+}
+
 func printCredits() {
 	// Styles
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(theme.ColorGreen)
+		Foreground(lipgloss.Color("86"))
 
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(theme.ColorLavender).
+		Foreground(lipgloss.Color("189")).
 		Bold(true)
 
 	contentStyle := lipgloss.NewStyle().
-		Foreground(theme.ColorSubtext0)
+		Foreground(lipgloss.Color("153"))
 
 	// Build sections
 	title := titleStyle.Render("🐑 baa — The update herd")
